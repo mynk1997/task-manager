@@ -1,0 +1,18 @@
+{
+  "name": "3.4 Get Task by ID",
+  "request": {
+    "type": "http",
+    "url": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+    "method": "GET",
+    "headers": [
+      {
+        "name": "Origin",
+        "value": "{{origin}}",
+        "enabled": true
+      }
+    ],
+    "scripts": {
+      "postResponse": "(function () {\n  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);\n  if (!r) return;\n\n  const testFn = r.test.bind(r);\n  const expectFn = r.expect.bind(r);\n  const env = r.environment;\n  const res = r.response;\n  const code = (res.code !== undefined) ? res.code : res.status;\n\n  testFn(\"Get Task by ID - Status code is 200\", function () {\n    expectFn(code).to.equal(200);\n  });\n\n  \n  testFn(\"Returned task matches requested ID\", function () {\n    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);\n    expectFn(data.task).to.exist;\n    expectFn(data.task.id).to.equal(env.get(\"taskId\"));\n  });\n                \n})();"
+    }
+  }
+}

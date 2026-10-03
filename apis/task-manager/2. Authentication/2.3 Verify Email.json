@@ -1,0 +1,27 @@
+{
+  "name": "2.3 Verify Email",
+  "request": {
+    "type": "http",
+    "url": "{{baseUrl}}/api/v1/auth/verify-email",
+    "method": "POST",
+    "headers": [
+      {
+        "name": "Content-Type",
+        "value": "application/json",
+        "enabled": true
+      },
+      {
+        "name": "Origin",
+        "value": "{{origin}}",
+        "enabled": true
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"token\": \"{{verificationToken}}\"\n}"
+    },
+    "scripts": {
+      "postResponse": "(function () {\n  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);\n  if (!r) return;\n\n  const testFn = r.test.bind(r);\n  const expectFn = r.expect.bind(r);\n  const env = r.environment;\n  const res = r.response;\n  const code = (res.code !== undefined) ? res.code : res.status;\n\n  testFn(\"Verify Email - Status code is 200\", function () {\n    expectFn(code).to.equal(200);\n  });\n\n  \n  testFn(\"Email is verified and user returned\", function () {\n    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);\n    expectFn(data.user).to.exist;\n    expectFn(data.user.emailVerified).to.equal(true);\n  });\n                \n})();"
+    }
+  }
+}

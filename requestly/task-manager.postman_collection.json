@@ -1,0 +1,1234 @@
+{
+  "info": {
+    "_postman_id": "7d0d0f41-a1e4-4d4d-a2f0-97e3f8981240",
+    "name": "Task Manager API Collection (Requestly)",
+    "description": "Complete API Collection for Task Manager project. Includes Health, Authentication (Registration, Verification, Session Management, Logout, Password Reset), Task CRUD with Timezone handling, and Negative Validation tests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "origin",
+      "value": "http://localhost:5173",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "developer.test@example.com",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "SuperSecretPassword123!@#",
+      "type": "string"
+    },
+    {
+      "key": "verificationToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "date",
+      "value": "2026-10-03",
+      "type": "string"
+    },
+    {
+      "key": "timeZone",
+      "value": "Asia/Kolkata",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health & System",
+      "description": "Service liveness and health check endpoints.",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Check if the Task Manager API service is online and healthy."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Health Check - Status code is 200\", function () {",
+                  "    expectFn(code).to.equal(200);",
+                  "  });",
+                  "",
+                  "  ",
+                  "  testFn(\"Health status is ok\", function () {",
+                  "    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);",
+                  "    expectFn(data.status).to.equal('ok');",
+                  "  });",
+                  "                ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication",
+      "description": "First-party authentication endpoints using Argon2id passwords and session cookies.",
+      "item": [
+        {
+          "name": "2.1 Register Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Register a new user account. In development mode, developmentVerificationToken is returned to facilitate automated testing."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Register Account - Status code is 201\", function () {",
+                  "    expectFn(code).to.equal(201);",
+                  "  });",
+                  "",
+                  "  ",
+                  "  testFn(\"Registration response contains unverified user and token\", function () {",
+                  "    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);",
+                  "    expectFn(data.user).to.exist;",
+                  "    expectFn(data.user.emailVerified).to.equal(false);",
+                  "    if (data.developmentVerificationToken) {",
+                  "      env.set(\"verificationToken\", data.developmentVerificationToken);",
+                  "    }",
+                  "  });",
+                  "                ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.2 Resend Verification Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verification-email/resend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verification-email",
+                "resend"
+              ]
+            },
+            "description": "Request a fresh email verification token without leaking account existence."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Resend Verification Email - Status code is 204\", function () {",
+                  "    expectFn(code).to.equal(204);",
+                  "  });",
+                  "",
+                  "  ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.3 Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{verificationToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verify-email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-email"
+              ]
+            },
+            "description": "Redeem the email verification token, activate the user, and establish an initial session cookie."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Verify Email - Status code is 200\", function () {",
+                  "    expectFn(code).to.equal(200);",
+                  "  });",
+                  "",
+                  "  ",
+                  "  testFn(\"Email is verified and user returned\", function () {",
+                  "    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);",
+                  "    expectFn(data.user).to.exist;",
+                  "    expectFn(data.user.emailVerified).to.equal(true);",
+                  "  });",
+                  "                ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.4 Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate with verified credentials and receive the session cookie."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Login - Status code is 200\", function () {",
+                  "    expectFn(code).to.equal(200);",
+                  "  });",
+                  "",
+                  "  ",
+                  "  testFn(\"Login returns authenticated profile\", function () {",
+                  "    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);",
+                  "    expectFn(data.user).to.exist;",
+                  "    expectFn(data.user.emailVerified).to.equal(true);",
+                  "  });",
+                  "                ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.5 Get Current User Profile (/auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Retrieve currently authenticated user profile from active session cookie."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Get Current User Profile - Status code is 200\", function () {",
+                  "    expectFn(code).to.equal(200);",
+                  "  });",
+                  "",
+                  "  ",
+                  "  testFn(\"Profile contains user id and email\", function () {",
+                  "    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);",
+                  "    expectFn(data.user).to.exist;",
+                  "    expectFn(data.user.id).to.exist;",
+                  "  });",
+                  "                ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.6 Request Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password-reset/request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "password-reset",
+                "request"
+              ]
+            },
+            "description": "Request a password reset email."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Request Password Reset - Status code is 204\", function () {",
+                  "    expectFn(code).to.equal(204);",
+                  "  });",
+                  "",
+                  "  ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.7 Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Invalidate the current session and clear session cookies."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Logout - Status code is 204\", function () {",
+                  "    expectFn(code).to.equal(204);",
+                  "  });",
+                  "",
+                  "  ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Tasks API",
+      "description": "CRUD endpoints for task management, supporting timezone conversion and scheduled/unscheduled tasks.",
+      "item": [
+        {
+          "name": "3.1 Create Timed Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Prepare Sprint Demo\",\n  \"description\": \"Review end-to-end Requestly API collection and demonstrate running workflows.\",\n  \"scheduledDate\": \"{{date}}\",\n  \"scheduledTime\": \"14:30\",\n  \"timeZone\": \"{{timeZone}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            },
+            "description": "Create a new task with a specific time (hasScheduledTime = true). Saves created task ID to taskId variable."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Create Timed Task - Status code is 201\", function () {",
+                  "    expectFn(code).to.equal(201);",
+                  "  });",
+                  "",
+                  "  ",
+                  "  testFn(\"Task created with scheduled time\", function () {",
+                  "    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);",
+                  "    expectFn(data.task).to.exist;",
+                  "    expectFn(data.task.hasScheduledTime).to.equal(true);",
+                  "    expectFn(data.task.status).to.equal('pending');",
+                  "    if (data.task.id) {",
+                  "      env.set(\"taskId\", data.task.id);",
+                  "    }",
+                  "  });",
+                  "                ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.2 Create Untimed Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Refactor backend tests\",\n  \"description\": \"Task without a specific scheduled time (hasScheduledTime = false).\",\n  \"scheduledDate\": \"{{date}}\",\n  \"timeZone\": \"{{timeZone}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            },
+            "description": "Create an unscheduled (all-day) task for the selected date."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Create Untimed Task - Status code is 201\", function () {",
+                  "    expectFn(code).to.equal(201);",
+                  "  });",
+                  "",
+                  "  ",
+                  "  testFn(\"Task created without scheduled time\", function () {",
+                  "    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);",
+                  "    expectFn(data.task).to.exist;",
+                  "    expectFn(data.task.hasScheduledTime).to.equal(false);",
+                  "  });",
+                  "                ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.3 List Tasks for Selected Day",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks?date={{date}}&timeZone={{timeZone}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "{{date}}"
+                },
+                {
+                  "key": "timeZone",
+                  "value": "{{timeZone}}"
+                }
+              ]
+            },
+            "description": "Fetch all tasks for a specific date converted to the requester's IANA timezone."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"List Tasks for Selected Day - Status code is 200\", function () {",
+                  "    expectFn(code).to.equal(200);",
+                  "  });",
+                  "",
+                  "  ",
+                  "  testFn(\"Response contains task array\", function () {",
+                  "    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);",
+                  "    expectFn(data.tasks).to.be.an('array');",
+                  "  });",
+                  "                ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.4 Get Task by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "{{taskId}}"
+              ]
+            },
+            "description": "Retrieve a single owned task resource by ID."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Get Task by ID - Status code is 200\", function () {",
+                  "    expectFn(code).to.equal(200);",
+                  "  });",
+                  "",
+                  "  ",
+                  "  testFn(\"Returned task matches requested ID\", function () {",
+                  "    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);",
+                  "    expectFn(data.task).to.exist;",
+                  "    expectFn(data.task.id).to.equal(env.get(\"taskId\"));",
+                  "  });",
+                  "                ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.5 Update Task Status (Complete)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "{{taskId}}"
+              ]
+            },
+            "description": "Mark an existing task as completed."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Update Task Status (Complete) - Status code is 200\", function () {",
+                  "    expectFn(code).to.equal(200);",
+                  "  });",
+                  "",
+                  "  ",
+                  "  testFn(\"Task status is completed and completedAt is set\", function () {",
+                  "    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);",
+                  "    expectFn(data.task.status).to.equal('completed');",
+                  "    expectFn(data.task.completedAt).to.exist;",
+                  "  });",
+                  "                ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.6 Reschedule and Edit Task",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Prepare Sprint Demo (Updated & Rescheduled)\",\n  \"description\": \"Updated notes for the demo.\",\n  \"scheduledDate\": \"{{date}}\",\n  \"scheduledTime\": \"17:00\",\n  \"timeZone\": \"{{timeZone}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "{{taskId}}"
+              ]
+            },
+            "description": "Update the title, notes, and rescheduled time of an existing task."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Reschedule and Edit Task - Status code is 200\", function () {",
+                  "    expectFn(code).to.equal(200);",
+                  "  });",
+                  "",
+                  "  ",
+                  "  testFn(\"Task title and schedule were updated\", function () {",
+                  "    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);",
+                  "    expectFn(data.task.title).to.include(\"Updated\");",
+                  "  });",
+                  "                ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.7 Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "{{taskId}}"
+              ]
+            },
+            "description": "Permanently delete an owned task."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Delete Task - Status code is 204\", function () {",
+                  "    expectFn(code).to.equal(204);",
+                  "  });",
+                  "",
+                  "  ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Negative & Security Tests",
+      "description": "Validation, authorization, and CSRF protection security checks.",
+      "item": [
+        {
+          "name": "4.1 Register with Invalid Email (Should Fail 422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid-email-address\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Invalid Email Registration - Status code is 422\", function () {",
+                  "    expectFn(code).to.equal(422);",
+                  "  });",
+                  "",
+                  "  ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.2 Untrusted Origin CSRF Protection (Should Fail 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Origin",
+                "value": "http://attacker-site.com",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"untrusted@example.com\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Untrusted Origin CSRF - Status code is 403\", function () {",
+                  "    expectFn(code).to.equal(403);",
+                  "  });",
+                  "",
+                  "  ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.3 Task Query Without Date (Should Fail 422)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Task Query Without Date - Status code is 422\", function () {",
+                  "    expectFn(code).to.equal(422);",
+                  "  });",
+                  "",
+                  "  ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.4 Non-Existent Task Query (Should Fail 404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{origin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);",
+                  "  if (!r) return;",
+                  "",
+                  "  const testFn = r.test.bind(r);",
+                  "  const expectFn = r.expect.bind(r);",
+                  "  const env = r.environment;",
+                  "  const res = r.response;",
+                  "  const code = (res.code !== undefined) ? res.code : res.status;",
+                  "",
+                  "  testFn(\"Non-Existent Task Query - Status code is 404\", function () {",
+                  "    expectFn(code).to.equal(404);",
+                  "  });",
+                  "",
+                  "  ",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

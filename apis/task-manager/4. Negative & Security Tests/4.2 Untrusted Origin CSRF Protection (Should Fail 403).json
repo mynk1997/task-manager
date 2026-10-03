@@ -1,0 +1,27 @@
+{
+  "name": "4.2 Untrusted Origin CSRF Protection (Should Fail 403)",
+  "request": {
+    "type": "http",
+    "url": "{{baseUrl}}/api/v1/auth/register",
+    "method": "POST",
+    "headers": [
+      {
+        "name": "Content-Type",
+        "value": "application/json",
+        "enabled": true
+      },
+      {
+        "name": "Origin",
+        "value": "http://attacker-site.com",
+        "enabled": true
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"email\": \"untrusted@example.com\",\n  \"password\": \"{{password}}\"\n}"
+    },
+    "scripts": {
+      "postResponse": "(function () {\n  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);\n  if (!r) return;\n\n  const testFn = r.test.bind(r);\n  const expectFn = r.expect.bind(r);\n  const env = r.environment;\n  const res = r.response;\n  const code = (res.code !== undefined) ? res.code : res.status;\n\n  testFn(\"Untrusted Origin CSRF - Status code is 403\", function () {\n    expectFn(code).to.equal(403);\n  });\n\n  \n})();"
+    }
+  }
+}

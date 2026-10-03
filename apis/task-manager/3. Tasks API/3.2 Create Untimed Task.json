@@ -1,0 +1,27 @@
+{
+  "name": "3.2 Create Untimed Task",
+  "request": {
+    "type": "http",
+    "url": "{{baseUrl}}/api/v1/tasks",
+    "method": "POST",
+    "headers": [
+      {
+        "name": "Content-Type",
+        "value": "application/json",
+        "enabled": true
+      },
+      {
+        "name": "Origin",
+        "value": "{{origin}}",
+        "enabled": true
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"title\": \"Refactor backend tests\",\n  \"description\": \"Task without a specific scheduled time (hasScheduledTime = false).\",\n  \"scheduledDate\": \"{{date}}\",\n  \"timeZone\": \"{{timeZone}}\"\n}"
+    },
+    "scripts": {
+      "postResponse": "(function () {\n  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);\n  if (!r) return;\n\n  const testFn = r.test.bind(r);\n  const expectFn = r.expect.bind(r);\n  const env = r.environment;\n  const res = r.response;\n  const code = (res.code !== undefined) ? res.code : res.status;\n\n  testFn(\"Create Untimed Task - Status code is 201\", function () {\n    expectFn(code).to.equal(201);\n  });\n\n  \n  testFn(\"Task created without scheduled time\", function () {\n    const data = typeof res.json === 'function' ? res.json() : JSON.parse(res.body);\n    expectFn(data.task).to.exist;\n    expectFn(data.task.hasScheduledTime).to.equal(false);\n  });\n                \n})();"
+    }
+  }
+}

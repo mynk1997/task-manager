@@ -1,0 +1,55 @@
+{
+  "id": "task-manager-dev-env",
+  "name": "Task Manager (Local Development)",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "origin",
+      "value": "http://localhost:5173",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "email",
+      "value": "developer.test@example.com",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "password",
+      "value": "SuperSecretPassword123!@#",
+      "enabled": true,
+      "type": "secret"
+    },
+    {
+      "key": "verificationToken",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "date",
+      "value": "2026-10-03",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "timeZone",
+      "value": "Asia/Kolkata",
+      "enabled": true,
+      "type": "default"
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

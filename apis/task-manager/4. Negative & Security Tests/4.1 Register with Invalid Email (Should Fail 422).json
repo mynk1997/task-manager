@@ -1,0 +1,27 @@
+{
+  "name": "4.1 Register with Invalid Email (Should Fail 422)",
+  "request": {
+    "type": "http",
+    "url": "{{baseUrl}}/api/v1/auth/register",
+    "method": "POST",
+    "headers": [
+      {
+        "name": "Content-Type",
+        "value": "application/json",
+        "enabled": true
+      },
+      {
+        "name": "Origin",
+        "value": "{{origin}}",
+        "enabled": true
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"email\": \"invalid-email-address\",\n  \"password\": \"{{password}}\"\n}"
+    },
+    "scripts": {
+      "postResponse": "(function () {\n  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);\n  if (!r) return;\n\n  const testFn = r.test.bind(r);\n  const expectFn = r.expect.bind(r);\n  const env = r.environment;\n  const res = r.response;\n  const code = (res.code !== undefined) ? res.code : res.status;\n\n  testFn(\"Invalid Email Registration - Status code is 422\", function () {\n    expectFn(code).to.equal(422);\n  });\n\n  \n})();"
+    }
+  }
+}

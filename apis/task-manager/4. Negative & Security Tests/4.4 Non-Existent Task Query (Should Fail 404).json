@@ -1,0 +1,18 @@
+{
+  "name": "4.4 Non-Existent Task Query (Should Fail 404)",
+  "request": {
+    "type": "http",
+    "url": "{{baseUrl}}/api/v1/tasks/00000000-0000-0000-0000-000000000000",
+    "method": "GET",
+    "headers": [
+      {
+        "name": "Origin",
+        "value": "{{origin}}",
+        "enabled": true
+      }
+    ],
+    "scripts": {
+      "postResponse": "(function () {\n  const r = typeof rq !== 'undefined' ? rq : (typeof pm !== 'undefined' ? pm : null);\n  if (!r) return;\n\n  const testFn = r.test.bind(r);\n  const expectFn = r.expect.bind(r);\n  const env = r.environment;\n  const res = r.response;\n  const code = (res.code !== undefined) ? res.code : res.status;\n\n  testFn(\"Non-Existent Task Query - Status code is 404\", function () {\n    expectFn(code).to.equal(404);\n  });\n\n  \n})();"
+    }
+  }
+}

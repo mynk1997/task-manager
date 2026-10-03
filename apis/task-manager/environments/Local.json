@@ -1,0 +1,41 @@
+{
+  "name": "Local",
+  "variables": {
+    "baseUrl": {
+      "value": "http://localhost:3001",
+      "type": "string",
+      "id": 0,
+      "isSecret": false
+    },
+    "origin": {
+      "value": "http://localhost:5173",
+      "type": "string",
+      "id": 1,
+      "isSecret": false
+    },
+    "email": {
+      "value": "developer.test@example.com",
+      "type": "string",
+      "id": 2,
+      "isSecret": false
+    },
+    "password": {
+      "value": "SuperSecretPassword123!@#",
+      "type": "string",
+      "id": 3,
+      "isSecret": true
+    },
+    "date": {
+      "value": "2026-10-03",
+      "type": "string",
+      "id": 4,
+      "isSecret": false
+    },
+    "timeZone": {
+      "value": "Asia/Kolkata",
+      "type": "string",
+      "id": 5,
+      "isSecret": false
+    }
+  }
+}

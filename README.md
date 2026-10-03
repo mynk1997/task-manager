@@ -1,75 +1,25 @@
-# React + TypeScript + Vite
+# Task Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A public-ready task manager in an npm-workspaces monorepo.
 
-Currently, two official plugins are available:
+## Apps
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- `apps/web` — React and Vite client.
+- `apps/api` — Express and TypeScript API with first-party session authentication.
+- `packages/api-contract` — Shared API validation contracts.
+- `infra` — local PostgreSQL development resources.
 
-## React Compiler
+## Local setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Install Node.js 20.19 or newer.
+2. Run `npm install` at the repository root.
+3. Copy `apps/api/.env.example` to `apps/api/.env` and configure it for your database. For public deployment, configure `SMTP_URL` and `EMAIL_FROM` so account verification and password reset emails can be delivered.
+4. Start PostgreSQL with `docker compose -f infra/docker-compose.yml up -d`.
+5. Generate and apply migrations with `npm run db:generate --workspace=@task-manager/api` and `npm run db:migrate --workspace=@task-manager/api`.
+6. Run `npm run dev:api` and `npm run dev:web` in separate terminals.
 
-## Expanding the ESLint configuration
+Run `npm run typecheck`, `npm run lint`, and `npm test` before committing.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Backend design
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
-
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+The API is mounted under `/api/v1`; its full requirements are in [docs/backend-requirements.md](docs/backend-requirements.md).
